@@ -23,23 +23,25 @@ runtest() {
   CONCURRENCY=$1
   ITERATIONS=$2
   URL=$3
-  for (( i = 1; i <= $ITERATIONS; i++ ))
+  declare -a PIDS=()
+  for (( j = 1; j <= $CONCURRENCY; j++ ))
   do
-    declare -a PIDS=()
-    for (( j = 1; j <= $CONCURRENCY; j++ ))
-    do
-      ( 
+    ( 
+      for (( i = 1; i <= $ITERATIONS; i++ ))
+      do
         curl -o /dev/null $URL 2>/dev/null ;
         if [ $? != 0 ]; then
           echo "ERROR"
         fi
-      ) &
-      PIDS[${j}]=$!
-    done
-    for PID in ${PIDS[*]}; do
-      wait $PID
-    done
-    echo -n "."
+        if [ $j == 1 ]; then
+          echo -n "."
+        fi
+      done
+    ) &
+    PIDS[${j}]=$!
+  done
+  for PID in ${PIDS[*]}; do
+    wait $PID
   done
   echo ""
 }
